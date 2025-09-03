@@ -20,7 +20,8 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   }
-}```
+}
+```
 
 - import 및 모듈의 절대 경로 별칭 설정
     - Next.js에는 tsconfig.json 및 jsconfig.json 파일의 "paths" 및 "baseUrl" 옵션에 대한 지원을 내장하고 있습니다.

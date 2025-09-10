@@ -36,14 +36,10 @@
 - Open Graph and Twitter images
   - twitter-image 트위터 이미지 파일 - jpg,jpeg
 - SEO  
+  - sitemap.xml/js : 사이트맵
   - robot 로봇파일 - .txt
 ---
-### Open Graph Protocol  
-- 웹사이트나 페이스북, 인스타그램, X (트위터), 카카오톡 등에 링크를 전달할 때 '미리보기' 를 생성하는 프로토콜입니다.
-- Open Graph Protocol이 대표적인 프로토콜 입니다.
-- 페이스북이 주도하는 표준화 규칙으로 대부분의 SNS 플랫폼에서 활용되고 있습니다.
-- 모든 플랫폼이 동일한 방식으로 오픈 그래프를 처리하는 것은 아닙니다.
-- 웹페이지의 메타 태그에 선언합니다.
+
 ### 2. Organizing your project(프로젝트 구성하기)
 - Next.js는 프로젝트 파일을 어떻게 구성하고 어디에 배치할지에 대한 제약이 없습니다.
 - 하지만 프로젝트 구성에 도움이 되는 몇 가지 기능을 제공합니다. [component의 계층 구조 ] Component hierarchy

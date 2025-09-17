@@ -1,5 +1,36 @@
 # 202130115 박건일
-## 20250-09-10 3주차 수업내용
+## 2025-09-17 4주차 수업내용
+### 1. Creating a page(페이지 만들기)
+- Next.js는 파일 시스템 기반 라우팅을 사용하기 때문에 폴더와 파일을 사용하여 경로를 정의할 수 있다.
+- 이번 장에서는 레이아웃과 페이지를 만들고 서로 연결하느 방법을 설명한다.
+
+- page는 특정 경로에서 렌더링되는 ui이다.
+- page를 생성하려면 app디렉터리에 page파일을 추가하고, React컴포넌트를 default export한다.
+### 2. Creating a layout(레이아웃 만들기)
+- layout은 여러 페이지에서 공유되는 UI입니다.
+- layout은 네비게이션에서 state 및 상호작용을 유지하며, 다시 렌더링 되지는 않습니다.
+- layout 파일에서 React 컴포넌트의 default export를 사용하여 layout을 정의할 수 있다.
+- layout 컴포넌트는 page또는 layout이 될 수 있는 children prop를 허용해야 한다.
+- children은 컴포넌트 안에 감싸진 요소를 의미
+- < page />는 < layout />컴포넌트의 children입니다.
+- layout컴포넌트를 만들 때 그 안에 들어갈 콘텐츠를 받을 수 있게 해야하고, 그 컨텐츠는 page또는 layout이 될 수 있다.
+   
+- Rootlayout component는 반드시 있어야함.
+### 3. Creating a nested route(중첩 라우트 만들기)
+- 중첩 라우트는 다음 URL 세그먼트로 구성된 라우트입니다.
+- 예를 들어, /blog/[sulg ]경로는 세 개으 세그먼트로 구성된다.
+  - / (Root Segment)
+  - blog (Segment)
+  - [slug ] (Leaf Segment)
+     
+- [Next.js에서 ]
+- 폴더는 URL 세그먼트에 매핑되는 경로 세그먼트를 정의하는데 사용된다. 즉 폴더가 URl세그먼트가 된다는 의미이다.
+- 파일은 세그먼트에 표시되는 UI를 만드는데 사용된다.
+- 폴더를 중첩하면 중첩된 라우트를 만들 수 있다.
+###  [ slug]의 이해
+
+
+## 2025-09-10 3주차 수업내용
 ### 용어 정의  
 - 원문에는 route라는 단어가 자주 등장하고, 사전적 의미로는 경로입니다.
 - route(라우트)는 경로를 의미하고, routing(라우팅)은 경로를 찾아가는 과정을 의미합니다.

@@ -50,13 +50,15 @@ export default async function Posts({ params }: { params: { slug: string } })
 const post = posts.find(pp.slugmslug);
  }
 ```
+---
 - sync function: 함수를 async로 선언해야 내부에서 await를 쓸 수 있습니다.
 - await을 사용하는 이유는 서버의 데이터를 읽어올 때 타임 딜레이에 의한 오류를 방지 하기 위해서 입니다.
   - RESTful API HTTP 프로토콜을 사용하여 자원을 식별하고 조작하는 통신 규칙을 정의
 - 매개변수 구조({ params }): Next.js가 페이지를 호출할 때는 props 객체로 {params. searchParams, ... } 같은 값을 넘겨주는데, 여기서 params만 구조 분해로 받고 있습니다.
 - 타입 { params: Promisec{ slug: string }> }: Typescript 타입 선언입니다.
-- params가 Promise(비동기 값)임을 명시하고 있습니다.
-      
+- params가 Promise(비동기 값)임을 명시하고 있습니다.  
+
+   
 - 4번째 라인 const { slug} = await params;
 - await params params가 가리키는 Promise를 해제(resolve) 해서 실제 객체 { slug:"..." }를 얻습니다.
 - const { slug }....는 그 객체에서 slug 프로퍼티만 꺼내 오는 구조 분해 할당입니다.

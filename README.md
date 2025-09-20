@@ -18,7 +18,8 @@
 - Rootlayout component는 반드시 있어야함.
 ### 3. Creating a nested route(중첩 라우트 만들기)
 - 중첩 라우트는 다음 URL 세그먼트로 구성된 라우트입니다.
-- 예를 들어, /blog/[sulg ]경로는 세 개으 세그먼트로 구성된다.
+- 폴더는 URL 세그먼트에 매핑되는 경로 세그먼트를 정의하는데 사용된다.
+- 예를 들어, /blog/[sulg ]경로는 세 개의 세그먼트로 구성된다.
   - / (Root Segment)
   - blog (Segment)
   - [slug ] (Leaf Segment)
@@ -27,9 +28,86 @@
 - 폴더는 URL 세그먼트에 매핑되는 경로 세그먼트를 정의하는데 사용된다. 즉 폴더가 URl세그먼트가 된다는 의미이다.
 - 파일은 세그먼트에 표시되는 UI를 만드는데 사용된다.
 - 폴더를 중첩하면 중첩된 라우트를 만들 수 있다.
+- URL Segment URL에서 특정 리소스에 대한 경로를 구성하는 부분을 의미한다.
+   
+- 폴더를 계속 중첩하여 중첩된 경로를 만들 수 있다. 
+- 예를 들어 특정 블로그 게시물에 대한 경로를 만들려면 blog 안에 새 [ slug] 폴더를 만 들고 page 파일을 추가한다.
+- 폴더 이름을 대괄호(예: [ slug])로 묶으면 데이터에서 여러 페이지를 생성하는데 사용 되는 동적 경로 세그먼트가 생성됩니다. 예: 블로그 게시물, 제품 페이지 등.
+---
 ###  [ slug]의 이해
+- slug는 사이트의 특정 페이지를 쉽게 읽을 수 있는 형태로 식별하는 URL의 일부입니다.
+- 신문이나 잡지 점에서 핵심 코미를 포함하는 단어만을 조합해 간단 정료하게 제목을 작성하는 것을 슐러그라고 하는 것에서 유래 하였습니다.
+- 문서의 경로/blog/[ slug]의 [ slug] 부분은 불러올 데이터의 key를 말합니다.
+- 따라서 데이터에는 slug key가 반드시 있어야 합니다.
 
-
+- 여기서 [ slug]는 nextjs, routing, ssr-ssg, dynamic-routes에 해당합니다.
+- 동작은 정상적으로 되지만 한가지 오류가 발생합니다. Error: Route "/blog/[ slug]" used "params.slug"- "params" should be awaited before using its properties.
+- 이 오류는 Next.js App Router에서 params가 비동기(async) 객체처럼 다뤄지는 경우 발생합니다.
+- Next.js 14.2 이후로 params와 searchParams는 내부적으로 Promise 기반 객체일 수 있어서, 바로 쓰면 안 되고 await하거나 props의 구조 분해에서 미리 await해야 합니다. 현재 실습 중인 버전은 15.x이기 때문에 오류가 발생하는 것입니다.
+```
+export default async function Posts({ params }: { params: { slug: string } })
+ { const { slug } = await params; // params
+const post = posts.find(pp.slugmslug);
+ }
+```
+- sync function: 함수를 async로 선언해야 내부에서 await를 쓸 수 있습니다.
+- await을 사용하는 이유는 서버의 데이터를 읽어올 때 타임 딜레이에 의한 오류를 방지 하기 위해서 입니다.
+  - RESTful API HTTP 프로토콜을 사용하여 자원을 식별하고 조작하는 통신 규칙을 정의
+- 매개변수 구조({ params }): Next.js가 페이지를 호출할 때는 props 객체로 {params. searchParams, ... } 같은 값을 넘겨주는데, 여기서 params만 구조 분해로 받고 있습니다.
+- 타입 { params: Promisec{ slug: string }> }: Typescript 타입 선언입니다.
+- params가 Promise(비동기 값)임을 명시하고 있습니다.
+      
+- 4번째 라인 const { slug} = await params;
+- await params params가 가리키는 Promise를 해제(resolve) 해서 실제 객체 { slug:"..." }를 얻습니다.
+- const { slug }....는 그 객체에서 slug 프로퍼티만 꺼내 오는 구조 분해 할당입니다.
+- const resolved = await params;
+const slug resolved.slug:
+      
+- 5번째 라인 const post = posts.find((p) p.slug === slug);
+- posts는 배열입니다. (예: 더미 데이터나 DB에서 가져온 결과)
+- .find()는 조건에 맞는 첫 번째 요소를 반환합니다. 못 찾으면 undefined를 반환합니다.
+- 여기서는 D.slug가 URL에서 온 slug와 일치하는 게시글을 찾아 post에 할당합니다.
+- .find는 찾는 것이 없으면 undefined이기 때문에 이후에 post.title 같은 접근을 하면 런타임 에러가 납니다.
+- 따라서 게시글이 존재 하는지를 검사할 필요가 있습니다.
+- 문서에서는 없기 때문에 이부분을 추가한 것입니다. (lib에 별도로 구현했을 수는 있음)
+   
+- 데이터 소스가 크다면 find는 O(n)이므로 DB 쿼리로 바꿔야 합니다. : 0(n)은 알고리즘의 시간 복잡도가 입력 데이터의 크기 n에 비례하여 시간이나 메모리 사용량이 선형적으로 증가하는 것을 의미합니다.
+- 앞의 코드에서는 Promise...>를 사용하지 않아도 오류 없이 동작했습니다.
+- 하지만 params가 동기식처럼 보이지만 사실은 비동기식이라는 것을 좀더 명확히 하기 위해 사용합니다. 코드의 가독성이 좋습니다.
+- 또 한가지 Promise를 명시해주면 await을 깜빡했을 때 TypeScript가 이를 잡아줍니다.
+- 결론적으로 오류와 상관없이 Promise 사용을 권장합니다.
+###  Nesting layouts (중첩 레이아웃)
+- 기본적으로 폴더 계층 구조의 레이아웃도 중첩되어 있습니다.
+- 즉, 자식 prop을 통해 자식 레이아웃을 감싸게 됩니다.
+- 특정 경로 세그먼트(폴더) 안에 레이아웃을 추가하여 레이아웃을 중첩할 수 있습니다.
+- 예를 들어 blog 경로에 대한 레이아웃을 만들려면 blog 폴더 안에 새 레이아웃 파일을 추가합니다.
+### 5.Creating a dynamic segment(동적 세그먼트 만들기)
+- 동적 세그먼트를 사용하면 데이터에서 생성된 경로를 만들 수 있습니다
+  - 예를 들어, 각 blog 게시물에 대한 경로를 직접 만드는 대신, 동적 세그먼트를 만들어 블로그 게시물 데이터를 기반으로 경로를 생성할 수 있습니다.
+  -동적 세그먼트를 생성하려면 세그먼트(폴더) 이름을 대괄호로 묶습니다. 예: [ segmentName]） 예를 들어, app/blog/[ slug]/page.tsx 경로에서 [ slug]는 동적 세그먼트입니다.
+### 6. Rendering with search params(검색 매개변수를 사용한 렌더링)
+- 서버 컴포넌트 page에서는 searchParams prop을 사용하여 검색 매개변수에 액세스할 수 있습니다.
+- searchParams를 사용하면 해당 페이지는 동적 렌더링 (dynamic rendering)으로 처리됩니다.
+- 왜냐하면 URL의 쿼리 파라미터(search parameters)를 읽기 위해 요청(request)이 필요하기 때문입니다.
+- 클라이언트 컴포넌트는 useSearchParams Hook을 사용하여 검색 매개변수를 읽을 수 있습니다.
+   
+- 페이지에 대한 데이터를 로드하기 위해 검색 매개변수가 필요한 경우(예: 페이지 매김, 데이터베이스에서 필터링) searchParams prop을 사용합니다.   
+- 검색 매개변수가 클라이언트에서만 사용되는 경우(예: props를 통해 이미 로딩된 목록을 필터링하는 경우) useSearchParams를 사용합니다.
+- 콜백이나 이벤트 핸들러에서 new URLSearchParams(window.location.search)를 사용하여 리랜더링을 하지 않고도 검색 매개변수를 읽어올 수 있습니다.
+- params는 동적 세그먼트 [ slug]에서 가져오는 값으로 URL의 path 부분에 포함된 데이터 를 의미합니다.
+- searchParams 는 query string에서 가져오는 값으로 URL의 ? 이후에 붙는 key=value 데이터를 의미합니다.
+### searchParams란?
+- URL의 쿼리 문자열(Query String)을 읽는 방법입니다.
+- 예시 URL: /products?category=shoes&page=2
+- 여기서 category=shoes, page=2가 search parameters입니다.
+### 왜 동적 렌더링이 되는가?
+- Next.js에서 페이지는 크게 정적(static) 또는 동적(dynamic)으로 렌더링될 수 있습니다.
+- searchParams는 요청이 들어와봐야 값을 알 수 있기 때문에, Next.js는 이 페이지를 정적으로 미리 생성할 수 없고, 요청이 올 때마다 서버 렌더링해야 합니다. -> 동적 렌더링 처리
+즉, searchParams를 사용하는 순간 Next.js는
+- 이 페이지는 요청이 들어와야 동작하네? -> 그러면 정적으로 미리 만들 수 없겠다!"라고 판단합니다. 
+   
+- 정적 렌더링 - 예시(/about,/ blog[ id]등), 빌드 시 생성, searhParams 사용 불가능
+- 동적 렌더링 - 예시(/products?page=2 와 같이 동적 URL), 요청 시 서버에서 생성, searhParams 사용 가능     
 ## 2025-09-10 3주차 수업내용
 ### 용어 정의  
 - 원문에는 route라는 단어가 자주 등장하고, 사전적 의미로는 경로입니다.

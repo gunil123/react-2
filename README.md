@@ -57,7 +57,6 @@ const post = posts.find(pp.slugmslug);
 - 매개변수 구조({ params }): Next.js가 페이지를 호출할 때는 props 객체로 {params. searchParams, ... } 같은 값을 넘겨주는데, 여기서 params만 구조 분해로 받고 있습니다.
 - 타입 { params: Promisec{ slug: string }> }: Typescript 타입 선언입니다.
 - params가 Promise(비동기 값)임을 명시하고 있습니다.  
-
    
 - 4번째 라인 const { slug} = await params;
 - await params params가 가리키는 Promise를 해제(resolve) 해서 실제 객체 { slug:"..." }를 얻습니다.

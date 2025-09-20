@@ -56,14 +56,14 @@ const post = posts.find(pp.slugmslug);
   - RESTful API HTTP 프로토콜을 사용하여 자원을 식별하고 조작하는 통신 규칙을 정의
 - 매개변수 구조({ params }): Next.js가 페이지를 호출할 때는 props 객체로 {params. searchParams, ... } 같은 값을 넘겨주는데, 여기서 params만 구조 분해로 받고 있습니다.
 - 타입 { params: Promisec{ slug: string }> }: Typescript 타입 선언입니다.
-- params가 Promise(비동기 값)임을 명시하고 있습니다.  
-   
+- params가 Promise(비동기 값)임을 명시하고 있습니다.          
+---   
 - 4번째 라인 const { slug} = await params;
 - await params params가 가리키는 Promise를 해제(resolve) 해서 실제 객체 { slug:"..." }를 얻습니다.
 - const { slug }....는 그 객체에서 slug 프로퍼티만 꺼내 오는 구조 분해 할당입니다.
 - const resolved = await params;
 const slug resolved.slug:
-      
+---      
 - 5번째 라인 const post = posts.find((p) p.slug === slug);
 - posts는 배열입니다. (예: 더미 데이터나 DB에서 가져온 결과)
 - .find()는 조건에 맞는 첫 번째 요소를 반환합니다. 못 찾으면 undefined를 반환합니다.

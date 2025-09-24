@@ -1,4 +1,13 @@
 # 202130115 박건일
+## 2025-09-24 5주차 수업내용
+- ### 왜 동적 렌더링이 되는가?
+- Next.js에서 페이지는 크게 정적(static) 또는 동적(dynamic)으로 렌더링될 수 있습니다.
+- searchParams는 요청이 들어와봐야 값을 알 수 있기 때문에, Next.js는 이 페이지를 정적으로 미리 생성할 수 없고, 요청이 올 때마다 서버 렌더링해야 합니다. -> 동적 렌더링 처리
+- 즉, searchParams를 사용하는 순간 Next.js는
+이 페이지는 요청이 들어와야 동작하네? -> 그러면 정적으로 미리 만들 수 없겠다!"라고 판단합니다. 
+      
+- 정적 렌더링 - 예시(/about,/ blog[ id]등), 빌드 시 생성, searhParams 사용 불가능
+- 동적 렌더링 - 예시(/products?page=2 와 같이 동적 URL), 요청 시 서버에서 생성, searhParams 사용 가능  
 ## 2025-09-17 4주차 수업내용
 ### 1. Creating a page(페이지 만들기)
 - Next.js는 파일 시스템 기반 라우팅을 사용하기 때문에 폴더와 파일을 사용하여 경로를 정의할 수 있다.
@@ -101,14 +110,7 @@ const slug resolved.slug:
 - URL의 쿼리 문자열(Query String)을 읽는 방법입니다.
 - 예시 URL: /products?category=shoes&page=2
 - 여기서 category=shoes, page=2가 search parameters입니다.
-### 왜 동적 렌더링이 되는가?
-- Next.js에서 페이지는 크게 정적(static) 또는 동적(dynamic)으로 렌더링될 수 있습니다.
-- searchParams는 요청이 들어와봐야 값을 알 수 있기 때문에, Next.js는 이 페이지를 정적으로 미리 생성할 수 없고, 요청이 올 때마다 서버 렌더링해야 합니다. -> 동적 렌더링 처리
-즉, searchParams를 사용하는 순간 Next.js는
-- 이 페이지는 요청이 들어와야 동작하네? -> 그러면 정적으로 미리 만들 수 없겠다!"라고 판단합니다. 
    
-- 정적 렌더링 - 예시(/about,/ blog[ id]등), 빌드 시 생성, searhParams 사용 불가능
-- 동적 렌더링 - 예시(/products?page=2 와 같이 동적 URL), 요청 시 서버에서 생성, searhParams 사용 가능     
 ## 2025-09-10 3주차 수업내용
 ### 용어 정의  
 - 원문에는 route라는 단어가 자주 등장하고, 사전적 의미로는 경로입니다.

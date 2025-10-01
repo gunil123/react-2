@@ -1,6 +1,6 @@
 # 202130115 박건일
 ## 2025-09-24 5주차 수업내용
-- ### 왜 동적 렌더링이 되는가?
+### 왜 동적 렌더링이 되는가?
 - Next.js에서 페이지는 크게 정적(static) 또는 동적(dynamic)으로 렌더링될 수 있습니다.
 - searchParams는 요청이 들어와봐야 값을 알 수 있기 때문에, Next.js는 이 페이지를 정적으로 미리 생성할 수 없고, 요청이 올 때마다 서버 렌더링해야 합니다. -> 동적 렌더링 처리
 - 즉, searchParams를 사용하는 순간 Next.js는
@@ -8,6 +8,117 @@
       
 - 정적 렌더링 - 예시(/about,/ blog[ id]등), 빌드 시 생성, searhParams 사용 불가능
 - 동적 렌더링 - 예시(/products?page=2 와 같이 동적 URL), 요청 시 서버에서 생성, searhParams 사용 가능  
+### searchParams 실습
+```
+export default async function ProductsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ id?: string: name?: string }>
+}) {
+  const { id="non id", name = "non name" } = await searchParams;
+  return (
+    <div>
+      <h1>Products Page</h1>
+      <p>id: {id}</p>
+      <p><name>: {name}</p>
+    </div>
+  )
+}
+```
+### [ slug]의 이해
+- 데이터 소스가 크다면 find는 0(n)이므로 DB 쿼리로 바꿔야 합니다. : O(n)은 알고리즘의 시간 복잡도가 입력 데이터의 크기 n에 비례하여 시간이나 메모리 사용량이 선형적으로 증가하는 것을 의미합니다.
+- 앞의 코드에서는 Promise... >를 사용하지 않아도 오류 없이 동작
+- 하지만 params가 동기식처럼 보이지만 사실은 비동기식이라는 것을 좀더 명확히 하기 위해 사용합니다. 코드의 가독성이 좋습니다.
+- 또 한가지 Promise를 명시해주면 await을 깜빡했을 때 TypeScript가 이를 잡아줍니다.
+- 결론적으로 오류와 상관없이 Promise 사용을 권장합니다.
+
+### 7.Linking between pages(페이지 간 연결)
+- 컴포넌트를 사용하여 경로 사이를 탐색 할 수 있다.
+- < Link > HTML 태그를 확장하여 prefetching 및 client-side navigation 기능을 제공하는 Next.js의 기본제공 컴포넌트입니다. - Prefetching은 사용자가 해당 경로로 이동하기 전에 백그라운드에서 해당 경로를 loading 하는 프로세스입니다.
+- 예를 들어, 블로그 글 목록을 생성하려면 next/link에서 를 가져와서 컴포넌트에 href prop을 전달합니다.
+```
+import Link from 'next/link'
+ 
+export default async function Post({ post }) {
+  const posts = await getPosts()
+ 
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.slug}>
+          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+---
+### /blog/page.tsx
+```
+import Link from "next/link";
+import { posts } from "../(marketing)/blog/[slug]/posts";
+
+export default async function BlogPage3() {
+    return (
+        <div>
+            <h1>블로그3 목록</h1>
+            <ul>
+                {posts.map((post) => (
+                    <li key={post.slug}>
+                        <Link href={`/blog3/${post.slug}`}>{post.title}</Link>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+```
+- React는 기본적으로 라우팅 기능이 없기 때문에, 직접 라우터 라이브러리를 설치해서 라우팅을 설정해야 합니다.
+- Next.js는 자체적으로 라우팅 시스템을 내장하고 있습니다.
+---
+### React vs Next.js 라우팅 방식의 차이
+- React는 수동 설치, react-router-dom 같은 외부라이브 필요,< Route>로 정의
+- Next.js에서 자동 설치, 자체 내장은 파일 기반 라우팅 시스템, 파일/폴더 이름으로 자동 매핑
+
+### How navigation works(네비게이션 작동 방식)
+ - Server Rendering
+  - 정적 렌더링(또는 사전 렌더링)은 서버 시작시간에 미리 계산을 통해 캐시를 생성합니다.
+    - 사용자는 초기 페이지 로드 시에 더 빠른 렌더링을 경험할 수 있습니다.
+  - 동적 렌더링은 클라이언트의 요청에 대한 응답으로 오직 실시간에 발생합니다.
+  - 서버 렌더링의 단점은 클라이언트가 새 경로를 요청하기 전에 서버의 응답을 기다려야 한다는 것입니다.
+  - Next.js는 사용자가 방문할 가능성이 높은 경로를 미리 가져오(prefetching)하고, 클라이언트 측 전환(client-side transitions)을 수행하여 지연 문제를 해결합니다.
+  - 최신 방향은 서버에서 페이지 HTML이 생성됩니다.
+### Prefetching
+- 프리페칭은 사용자가 해당 경로로 이동하기 전에 백그라운드에서 해당 경로를 로드하는 프로세스입니다.
+- 사용자가 링크를 클릭하기 전에 다음 경로를 렌더링하는 데 필요한 데이터가 클라이언트 즉에 이미 준비되어 있기 때문에 애플리케이션에서 경로 간 이동이 즉각적으로 느껴집니다.
+- Next.js는 < link› 컴포넌트와 연결된 경로를 자동으로 사용자 뷰포트에 미리 가져옵니다.
+- tag를 사용하면 프리페칭을 하지 않습니다.
+### Prefetching(프리페칭: 미리 가져오기)
+   
+- 미리 가져오는 경로의 양은 정적 경로인지 동적 경로인지에 따라 달라집니다.
+  - 정적 경로: 전체 경로가 프리퍼치 됩니다.
+  - 동적 경로: 프리페치를 건너뛰거나, loading.ts가 있는 경우 경로가 부분적으로 프리페칭 됩니다.
+- Next.js는 동적 라우팅을 건너뛰거나 부분적으로 프리페칭하는 방법으로 사용자가 방문 하지 않을 수도 있는 경로에 대한 서버의 불필요한 작업을 방지합니다.
+- 그러나 네비게이션 전에 서버 응답을 기다리면 사용자에게 앱이 응답하지 않는다는 인상을 줄 수도 있습니다.
+- 동적 경로에 대한 네비게이션 환경을 개선하려면 스트리밍을 사용할 수 있습니다.
+   
+### Streaming (스트리밍)
+- 스트리밍을 사용하면 서버가 전체 경로가 렌더링될 때까지 기다리지 않고, 동적 경로의 일부가 준비되는 즉시 클라이언트에 전송할 수 있습니다.
+- 즉, 페이지의 일부가 아직 로드 중이더라도 사용자는 더 빨리 콘텐츠를 볼 수 있습니다.
+- 동적 경로의 경우, 부분적으로 미리 가져올 수 있다는 뜻입니다. 즉, 공유 레이아웃과 로딩 스켈레톤을 미리 요청할 수 있습니다.
+   
+- 스트리밍을 사용하려면 라우팅 폴더에 loading.tsx 파일을 생성합니다.
+```
+export default function Loading() {
+  // Add fallback UI that will be shown while the route is loading.
+  return <LoadingSkeleton />
+}
+```
+- Next.js는 백그라운드에서 page.tsx 콘텐츠를 < Suspenser 경계로 자동 래핑합니다.
+- loading.tsx의 이점:
+  - 사용자에게 즉각적인 네비게이션과 시각적 피드백을 제공합니다.
+  - 공유 레이아웃은 상호 작용이 가능하고, 네비게이션은 중단될 수 있습니다.
 ## 2025-09-17 4주차 수업내용
 ### 1. Creating a page(페이지 만들기)
 - Next.js는 파일 시스템 기반 라우팅을 사용하기 때문에 폴더와 파일을 사용하여 경로를 정의할 수 있다.

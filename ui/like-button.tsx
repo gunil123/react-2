@@ -18,7 +18,8 @@ export default function LikeButton({ likes }: { likes: number }) {
 }
 
     return (
-        <button onClick={handleLike} disabled={isLiking} aria-pressed={false}>  
+        <button onClick={handleLike} disabled={isLiking} aria-pressed={false}>
+        👍 {count} 
         </button>
     )
 }

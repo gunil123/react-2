@@ -1,4 +1,127 @@
 # 202130115 박건일
+## 2025-10-17 7주차 수업내용
+### server 및 client component를 언제 사용하나요?
+- client 환경과 sever 환경은 서로 다른 기능 갖음.
+- 각각의 환경에서 필요한 로직을 실행할 수 있음.
+- 다음과 같은 항목이 필요할 경우 client component 사용
+  - state 및 event hadler, 예. onClick, onChange
+  - Lifecycle logic, 예. useEffect
+  - 브라우저 전용 API, 예. localStroage, window, Navigator, gelocation 등
+  - 사용자 정의 Hock
+- 다음은 server component 사용
+  - 서버의 데이터베이스 혹은 API에서 data를 가져오는 경우 사용
+  - API Key, token 및 기타 보안 데이터 Client에 노출하지 않고 사용
+  - 브라우저로 전송되는 JavaScript의 양을 줄이고 싶을 때
+  - 콘텐츠가 포함된 첫 번째 페인트를 개선하고, 콘텐츠를 client에 점진적으로 스트리밍
+
+- 예를 들어, Page component는 게시물에 대한 데이터를 가져와서, client 측 상호 작용을 처리하는 likeButton에 props로 전달하는 server component입니다.
+- 그리고, ui/like-button은 client component이기 때문에 use client를 사용 
+---
+### [ Optimistic Update(낙관적 업데이트)]
+- 사용자에 의해 이벤트가 발생하면, 서버 응답을 기다리지 않고 클라이언트(브라우저)의 UI를 즉시 변경(업데이트)합니다.
+- 서버에 보낸 요청의 성공을 낙관한다고 가정해서 먼저 화면에 변화를 보여줍니다.
+- 서버에서 응답이 없으면, UI를 원래 상태로 되돌립니다.(rollback)
+- 네트워크 지연 동안에도 앱이 "빠르게 반응" 하도록 느끼게 하는 것이 목적입니다.
+- (장점)
+  - 서버 응답 속도와 관계없이 즉각적인 피드백을 제공하여 사용자 경험을 향상
+  - 네트워크 상태가 나쁘거나 응답 시간이 길어도 사용자에게 체감되는 속도 빠름
+- (단점)
+  - 서버에서 오류 발생하면, 사용자에게는 잠시 동안 잘못된 정보가 표시될 수 있다.
+  - 오류 발생 시 복구 로직 필요
+---
+### 문서의 코드를 완성해 봅시다. like-button.tsx
+- /ui/like-button.tsx에서는 state 2개 사용
+- count는 like 버튼 클릭 횟수
+- count는 like 버튼을 클릭한 횟수라고 했지만 (likes)가 아닌 (like ?? 0)로 작성한 이유는? null 병합연산자
+- [ Null 병합 연산자]
+- 왼쪽 피연산자가 null 또는 undefined 이면 오른쪽 값을 반환하고, 그렇지 않으면 왼쪽 값 반환
+  - 즉, likes의 값이 null이나 undefined이면 0값 반환, 값이 있으면 그대로 반환
+
+- 'Falsy'는 프로그래밍 언어, 특히 JavaScript에서 조건문이나 논리 연ㅅ나 등 불리언값이 필요한 맥락에서 false 로평가되는 값들을 의미
+  - false 값 분 아니라 해당하는 값 포함
+  - 거짓 같은 값은 Bollem문맥에서 false로 평가되는 값
+     
+---
+### Next.js에서 sever와 Client component는 어떻게 작동합니까?
+- server에서 Next.js는 React의 API를 사용하여 렌더링 조정
+- 렌더링 작업은 개별 라우팅 세그먼트 별 묶음으로 나뉨.
+- server component는 RSC Payload라는 특수한 데이터 형식으로 렌더링
+- client component와 RSC Payload는 HTML을 미리 렌더링 하는데 사용
+  - React Server Component PayLoad(RSC)란?
+    - RSC 페이로드는 렌더링된 React server component 트리의 압축된 바이너리 표현
+    - client에서 React의 브라우저의 DOM을 업데이트하는데 사용
+       
+- RSC 페이로드에는 다음 내용 포함    
+  - server component의 렌더링 결과
+  - client component가 렌더링될 위치 및 해당 JavaScript 파일 참조를 위한 자리 표시자
+  - server component에서 client component로 전달되는 모든 props
+---  
+### RSC는 JSON인가, 바이너리인가?
+- 과거 : JSON 기반
+- 현재 : 바이너리 형식으로 최적화
+  - 최신 React, 특히 Next.js App Router는 RSC payload를 compact binary format으로 전송
+  - JSON이 아니라, React 전용 이진 포맷으로 스트림을 통해 전달
+  - 이 방식은 JSON보다 용량이 작고, 빠르게 파싱
+- React는 컴포넌트 구조, props, 서버에서 생성된 UI정보를 RSC 프로토콜 정의하고, 이를 전송한느 것에 특화된 이진 형식을 사용
+   
+- 어떻게 이진이 브라우저에서 처리될까?
+  - React가 server에서 만든 UI트리를 바이너리 스트림으로 client에 전달
+  - client 측 React는 이를 해석해 UI 재구성
+  - Next.js는 이 작업을 통해 자동으로 처리하기 때문에 신경안써도 됨.  
+---
+### Next.js에서 sever와 Client component는 어떻게 작동합니까?
+- client component의 작동
+1. Html은 사용자에게 경로(라우팅 페이지)의 비대화형 미리보기를 즉시 보여주는데 사용
+2. RSC 페이지로드는 client와 sever component 트리를 조정하는데 사용
+3. JavaScript는 client component를 hydration하고, 애플리케이션을 대화형으로 만드는데 사용
+- Hydration이란 무엇인가?
+  - Hydration은 이벤트 핸들러를 DOM에 연결하여 정적 HTML을 인터랙티브하게 만드는 React의 프로세스
+  
+### Example
+- *client component* 사용
+  - 파일의 맨 위, 즉 imort문 위에 "use client" 지시문 추가하여 client component 생성할 수 있음
+  - "use clinet"는 server와 client 모듈 트리 사이의 경계를 선언하는데 사용
+  - 파일에 "use client"로 표시되면 해당 파일의 모든 import와 자식 component는 client번들의 일부로 간주
+  - 즉, client를 대상으로 하는 모든 component에 이 지시문 추가할 필요 없음.
+
+### 3-1. client component 사용 #실습
+
+- 문서의 코드는 /app/ui/counter.tsx를 작성했지만, src 디렉토리를 사용하는 경우는 다음과 같이 관리하는 것이 일반적입니다.
+- src/app/ 아래에는 라우팅 페이지만 작성하고 관리합니다.
+- 기타 사용자 정의 component나 library는 src/ 아래에 작성하고 관리합니다.
+
+### [ 실습1] 따라서 이번 실습 코드는 src/components 디렉토리를 만들고 Counter 컴포넌트를 작성합니다.
+```
+src > components > counter.tsx > Counter
+'use client'
+
+import { useState } from 'react'
+
+export default function Counter() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <div>
+      <p>{count} likes</p>
+      <button onClick={() => setCount(count + 1)}>Click me</button>
+    </div>
+  )
+}
+```
+- Counter 컴포넌트를 작성했으며 무엇을 해야 할까요?
+
+- 작성하는 이유는 사용할 목적이 있기 때문이다.
+  - 다른 컴포넌트의 완성을 위해 사용
+  - 라우팅 페이지에서 렌더링을 위해 사용
+
+
+### 3-2. JS bundle 크기 줄이기
+-  client JavaScript 번들의 크기를 줄이려면 UI의 큰 부분을 client component로 표시하는 대신 특정 대화형 component에 “use client”를 추가합니다.
+- 예를 들어, 다음 예제의 `<Layout>` component는 로고와 탐색 링크와 같은 정적 요소가 대부분이지만 대화형 검색창이 포함되어 있습니다.
+- `<Search />`는 대화형이기 때문에 client component가 되어야 하지만, 나머지 layout은 server component로 유지될 수 있습니다.
+- 나머지 layout은 server component로 유지해야 합니다!
+
+---
 ## 2025-10-01 6주차 수업내용
 ### 1-4. Client-side transitions (클라이언트 측 전환)
 - 일반적으로 서버 렌더링 페이지로 이동하면 전체 페이지가 로드됩니다. 이로 인해 state가 삭제되고, 스크롤 위치가 재설정되며, 상호작용이 차단됩니다.
@@ -7,6 +130,15 @@
 - 현재 페이지를 미리 가져온(prefetching) 로딩 상태 또는 사용 가능한 경우 새 페이지로 바꿉니다.
 - 클라이언트 측 전환은 서버에서 렌더링된 앱을 클라이언트에서 렌더링된 앱처럼 느껴지게 하는 요소입니다. 또한 프리페칭 및 스트리밍과 함께 사용하면 동적 경로에서도 빠른 전환이 가능합니다.
 ---
+### 3-3 server에서 client component로 데이터 전달
+- 다른 방법으로는 use Hook을 사용하여 server component에서 client component로 데이터를 스트리밍할 수도 있다. 
+- 알아두면 좋은 정보 : client component에 전달되는 porps는 React로 직렬화 가능해야 한다
+
+
+### 직렬화란 무엇인가?
+- 일반적으로 메모리에 있는 복잡한 데이터를 바이트의 연속 형태로 변환하는 과정
+- 즉, 자바스크립트의 객체나 배열처럼 구조가 있는 데이터를 파일로 저장하거나, 네트워크로 전송하기 쉽게 만드는 과정
+- React 나 Next.js 같은 프레임워크는 컴포넌트의 상태나 트리 주고를 서버에서 직렬화하여 클라이언트로 전송하고, 클라이언트에서 역직렬화 하는 과정을 수행
 ### 1. 네비게이션 작동 실습 
   - blog 디렉토리 생성 후 page.tsx 블로그 목록과, loading.tsx 로딩 스켈레톤 생성
 ### 2. 전환을 느리게 만드는 요인은 무엇일까요?

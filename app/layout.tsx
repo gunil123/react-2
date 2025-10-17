@@ -6,19 +6,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        <header>
-          <nav>
-            {/* Prefetched when the link is hovered or enters the viewport */}
-            <Link href="/">Home</Link> | <Link href="/blog">Blog</Link> |
-            <a href="https://google.com">Google with a tag</a> |
-            <a href="/blog" target="_blank">Blog with a tag</a> <br />
-            <Link href="/blog2">Blog2</Link> | <Link href="/blog2/nextjs">Slug - nextjs</Link>
-          </nav>
-        </header>
-        <main>{children}</main>
-      </body>
-    </html>
-  );
+  <html lang="en">
+    <body>
+      <header>
+        <p>=== Root Layout Header ===</p>
+        <nav>
+          <Link href="/">Home</Link> | <Link href="/counter">Counter</Link><br /><br />
+          Slug Page Menu :&nbsp;
+          <Link href="/nextjs">nextjs</Link>&nbsp; |&nbsp;
+          <Link href="/routing">routing</Link>&nbsp; |&nbsp;
+          <Link href="/ssr-ssg">ssr-sge</Link>&nbsp; |&nbsp;
+          <Link href="/dynamic-routes">dynamic-routes</Link>
+        </nav>
+      </header>
+      <main>
+        {children}
+      </main>
+      <footer>=== Root Layout Footer ===</footer>
+    </body>
+  </html>
+);
 }

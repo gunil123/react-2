@@ -1,4 +1,140 @@
 # 202130115 박건일
+## 2025-10-22 9주차 수업내용
+### server 및 client component 인터리빙 
+- 인터리빙(Interleaving)은 일반적으로 여러 데이터 블록이나 비트를 섞어서 전송하거나 처리하여 오류 발생 시 영향을 최소화하는 기술입니다.
+- 특히 데이터 통신에서 버스트 오류(연속적인 오류)를 줄이고 오류 정정 코드를 효과적으로 사용하기 위해 사용됩니다.
+- 프로그래밍이나 문서에서는 sever 컴포넌트와 client 컴포넌트가 섞여서(interleaved) 동작하는 것을 의미 합니다.
+- server component를 client component에 prop을 통해 전달할 수 있습니다.
+- 이를 통해 client component 내에서 server에서 렌더링된 UI를 시각적으로 중첩할 수 있습니다.
+- < ClientComponent>에 공간(slot)을 만들고 children을 끼워넣는 패턴이 일반적입니다.
+   
+- 예를 들어, client의 state를 사용하여 표시 여부를 전환(toggle)하는 
+< Modal> component 안에 server에서 데이터를 가져오는 < Cart> component가 있습니다.
+* 그 다음 부모 server component(예: < Page>) 안에 < Modal>의 자식으로 
+< Cart>를 전달할 수 있습니다.
+* Modal을 불러오는 곳이 Page이기 때문에 Page가 parent가 되는 것입니다.   
+
+---
+- 실습을 하기 전에 문서의 설명을 정리하면
+
+- -> 클라이언트 컴포넌트가 껍데기 역할을 하고, 서버 컴포넌트가 그 안의 내용(children)으로 들어오는 구조(패턴)를 설명하는 것입니다.
+
+*** Next.js에서는 기본적으로
+- Server Component -> 서버에서 렌더링 됨.(데이터 패칭 가능)
+- Client Component -> 브라우저에서 렌더링 됨.(상호작용 가능)
+
+### 즉, 서버 컴포넌트 안에는 클라이언트 컴포넌트를 넣을 수 있지만, 그 반대는 직접적으로는 불가능합니다.
+
+- 그래서 "interleaving"이란 아이디어가 나오게 되는 것입니다.
+- 클라이언트 컴포넌트 안에 생성한 children 슬롯에 서버 컴포넌트를 '끼워 넣는' 방식으로 둘을 섞어서 사용하자는 아이디어 입니다. 
+
+---
+### 동작 과정을 살펴보면
+- Next.js는 먼저 ServerContent를 서버에서 렌더링 -> HTML로 변환
+- 이 HTML을 ClientLayout의 {children} 자리에 “끼워 넣음”
+- 그 다음 클라이언트에서는 ClientLayout만 hydration(즉, JS 연결)
+- 결국 서버 데이터는 이미 들어와 있고, 버튼이나 이벤트 등은 클라이언트 컴포넌트에서 처리가 가능해 집니다. -> 이렇게 둘이 섞여(interleaved) 있는 패턴이 되는 것입니다.
+
+---
+### Context란 무엇인가?
+- 다음 절은 3-5. Context provider 입니다.
+- React에서도 나온 개념이지만, 문서를 보기 전에 먼저 context에 대해서 알아보겠습니다.
+- Next.js에서 Context는 React의 Context API를 사용하여 컴포넌트 사이에 데이터를 공유하는 매커니즘을 의미합니다.
+- 즉, 부모 컴포넌트에서 자식 컴포넌트로 직접 props를 전달하지 않고도, 특정 데이터를 필요한 컴포넌트에서 쓸 수 있도록 도와줍니다.
+
+### [ Context의 주요 특징 ]
+- #전역 상태 관리
+  - Context를 사용하면 애플리케이션 전체에서 공유해야 하는 데이터를 중앙 집중적으로 관리할 수 있습니다. (예: 사용자 정보, 테마 설정 등)
+- #props drilling 문제 해결
+  - 컴포넌트 트리가 깊어질수록 props를 계속 전달해야 하는 번거로움을 줄여줍니다.
+  - Context를 사용하면 필요한 컴포G넌트에서 바로 데이터를 가져올 수 있으므로, 코드의 가독성을 높이고 유지 보수를 용이하게 합니다.
+- #React 컴포넌트에서 사용
+  - Context는 React에서 제공하는 기능이기 때문에, Next.js에서도 React 컴포넌트를 사용하여 구현합니다.
+
+ 
+- #MyContext는 Context객체를 나나태고, MyContext.Provider는 MyComponent에 데이터 제공
+- #'useContext(MyContext)'를 통해 MyComponent는 "Hello from Context"값을 가져와서 렌더링
+
+---
+### 3-5. Context provider (컨텍스트 제공자)
+
+* React Context는 일반적으로 아래 테마처럼 전역 상태를 공유하는데 사용됩니다.
+* 그러나 server component에서는 React Context가 지원되지 않습니다.
+* Context를 사용하려면 children을 허용하는 client component로 만들어야 합니다.
+* 그 다음 layout 가져옴.
+
+- 알아두면 좋은 정보
+  * Provider component를 트리에서 가능한 한 깊숙이 렌더링해야 합니다.
+  * ThemeProvider가 전체 < html> 문서 대신 {children}만 래핑하는 방식을 주목하세요.
+  * 이렇게 하면 Next.js가 server component의 정적 부분을 더 쉽게 최적화할 수 있습니다.
+---
+### Context 생성 코드 설명 (theme-provider.tsx) - client 컴포넌트
+- context를 사용하면 props를 사용하지 않고도 전역적으로 사용할 theme, 언어 설정, 로그인 정보 등을 하위 컴포넌트에 전달할 수 있습니다.
+- createContext()는 React 컴포넌트 트리 전체에 값을 공유할 수 있도록 하는 역할을 합니다.
+- createContext(...)로 Context 객체를 생성하여, Theme state를 공유 합니다. Line5 ~
+
+- <{...}> 부분은 타입 부분입니다. Line6, 7
+  - theme: 'light' 또는 'dark' 중 하나이고,
+  - toggleTheme: 아무 인자도 받지 않고, 반환값도 없는 함수라는 것을 의미합니다.
+- 기본값(default value)은 provider가 없을 때 사용할 fallback value입니다. Line9, 10
+  - React에서는 createContext()를 호출할 때 기본값이 반드시 있어야 합니다.
+  - 보통은 실제 동작하지 않는 빈 함수(() => {})를 기본으로 넣어둡니다.
+  - 실제 동작은 ThemeProvider 컴포넌트에서 설정하게 됩니다.
+  - theme: 'light', toggleTheme: () => {}
+
+- 다음 파일 내부에서 ThemeProvider 컴포넌트를 정의합니다. Line13 ~
+- useState로 theme 상태를 관리합니다. Line18 : line6에서도 나왔던 <'light' | 'dark'>은 TypeScript의 **“유니온 타입(Union Type)”**이며, 초기값은 light라는 것을 의미 합니다.
+
+```const [theme, setTheme] = useState<'light' | 'dark'>('light')```
+
+- TypeScript의 유니온 타입(Union Type)이란?
+- '|'(파이프)로 여러 타입을 연결해서 “이 값은 각각의 타입 중 하나가 될 수 있다”는 것을 지정 합니다.
+- 코드에서 문자열 리터럴 유니온 타입의 경우, state 값으로 'light' 또는 'dark'만 설정할 수 있어 코드 자동완성과 타입 안정성이 향상 됩니다.    
+---
+- #다음은 useEffect Hook을 사용해서 테마(Theme)를 HTML 문서 전체에 적용하는 아주 전형적인 패턴입니다. Line20~24
+- useEffect Hook은 컴포넌트가 렌더링된 후 부수 효과(side effect)를 실행하기 위한 함수입니다.
+``` useEffect(() => {
+if (typeof window !== 'undefined') {
+document.documentElement.dataset.theme = theme
+ }
+}, [theme])
+```
+- #if문의 조건절은 “현재 실행 환경이 브라우저인지 확인”하는 부분입니다. Line21
+  - 서버 사이드 렌더링(SSR) 단계에서는 window 객체가 없습니다.
+  - 만약 서버에서 window를 참조하면 오류가 발생합니다. (ReferenceError: window is not defined)
+- -> 따라서 typeof window !== 'undefined'는 “클라이언트(브라우저) 환경일 때만 실행하라”는 뜻입니다.
+---
+
+- #line22는 다음과 같은 의미입니다.
+  - document.documentElement는 HTML 문서의 < html> 요소를 가리킵니다.
+  - .dataset.theme = theme 은 < html> 태그에 data-theme 속성을 추가하는 코드입니다.
+  - -> 만일 theme state 값이 “dark”라면 다음과 같이 HTML을 반환합니다. < html data-theme="dark">
+
+- #useEffect의 두 번째 인자 [ theme] 는 의존성 배열(dependency array) 입니다. line24
+  - theme 값이 변경될 때마다 useEffect 안의 코드가 다시 실행됩니다.
+  - 즉, 테마가 바뀔 때마다 HTML의 data-theme 속성도 업데이트됩니다.
+
+- #이 방법을 사용할 경우 CSS에서 속성을 조건으로 스타일을 다르게 지정할 수 있습니다.
+---
+- 여기서 html[ data-theme='light']는 **속성 선택자(Attribute Selector)**로 CSS에서 클래스(.class)나 아이디(#id)처럼 요소를 선택하는 또 다른 방법 입니다.
+- 속성 선택자는 class를 여러 개 붙이는 경우보다 스타일 충돌을 줄일 수 있습니다.
+- theme state를 3항 연산자를 사용해서 토글하여 setTheme함수를 이용해서, toggleTheme 에 저장합니다. line26
+- ThemeContext.Provider는 무엇일까요?
+- createContext 함수를 호출하면, React는 Context 객체 하나를 만들어줍니다.
+- 이 객체 안에는 여러가지 속성이 있는데, 대표적인 것이 다음 두 가지가 입니다.
+- ThemeContext.Provider, ThemeContext.Consumer입니다.
+- 즉, Provider는 createContext()를 호출하면 자동으로 생성되는 React 컴포넌트입니다. line28
+- 따라서 ThemeContext.Provider 컴포넌트에 현재 theme state와 함께 toggleTheme 함수도 함께 props로 전달합니다. line28
+- 즉, 하위 컴포넌트에서는 현재 theme state를 알 수 없기 때문에 버튼 쪽으로 toggleTheme 함수와 함께 theme state를 함께 전달하는 것입니다.
+
+---
+### 테마 토글버튼 코드 설명 (theme-status.tsx) - client 컴포넌트
+- ThemeContext를 사용하기 위해서 theme-provider를 import합니다. line4
+- useContext 함수를 이용해서 ThemeContext에서 전달 받은 theme와 toggleTheme를 추출 합니다. line7
+- 클릭 이벤트가 발생하면 추출된 toggleTheme함수를 실행되고, 버튼 내의 삼항 연산자를 사용하여 버튼의 모양을 교체해 줍니다. line10 ~ line11
+
+---
+
 ## 2025-10-17 7주차 수업내용
 ### server 및 client component를 언제 사용하나요?
 - client 환경과 sever 환경은 서로 다른 기능 갖음.
@@ -15,7 +151,7 @@
   - 콘텐츠가 포함된 첫 번째 페인트를 개선하고, 콘텐츠를 client에 점진적으로 스트리밍
 
 - 예를 들어, Page component는 게시물에 대한 데이터를 가져와서, client 측 상호 작용을 처리하는 likeButton에 props로 전달하는 server component입니다.
-- 그리고, ui/like-button은 client component이기 때문에 use client를 사용 
+- 그리고, ui/like-button은 client component이기 때문에 use client를 사용
 ---
 ### [ Optimistic Update(낙관적 업데이트)]
 - 사용자에 의해 이벤트가 발생하면, 서버 응답을 기다리지 않고 클라이언트(브라우저)의 UI를 즉시 변경(업데이트)합니다.

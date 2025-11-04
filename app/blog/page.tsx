@@ -1,7 +1,15 @@
-export default async function BlogPage() {
+import Posts from '@/components/posts'
+import { Suspense } from 'react'
+
+export default function Page() {
+  // Don't await the data fetching function
+  // const posts = getPosts()
+  const posts = fetch('https://jsonplaceholder.typicode.com/posts')
+    .then((res) => res.json())
 
   return (
-      <h1>블로그</h1>
-
-  );
+    <Suspense fallback={<div>Loading...</div>}>
+      <Posts posts={posts} />
+    </Suspense>
+  )
 }

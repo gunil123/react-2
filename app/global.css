@@ -1,0 +1,11 @@
+html[data-theme='light'] {
+  background-color: white;
+  color: black;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+html[data-theme='dark'] {
+  background-color: black;
+  color: white;
+  transition: background-color 0.3s, color 0.3s;
+}

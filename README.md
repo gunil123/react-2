@@ -1,4 +1,164 @@
 # 202130115 박건일
+## 2025-10-20 10주차 수업내용
+### CSS 수정
+```
+html[data-theme='light'] {
+  background-color: white;
+  color: black;
+}
+
+html[data-theme='dark'] {
+  background-color: black;
+  color: white;
+}
+```
+### Context provider의 실행 과정 리뷰
+- 1.Context 생성 (theme-provider.tsx)
+  - createContext(...)로 Context 객체를 만듭니다.
+    - : 초기값(default value)은 provider가 없을 때 사용할 fallback입니다.
+    - (여기선 theme: 'light', toggleTheme: () => {}).
+  - 이 파일 내부에서 ThemeProvider 컴포넌트를 정의합니다.
+    - useState로 theme 상태를 관리(예: 'light' | 'dark').
+    - toggleTheme 함수는 setTheme을 호출해 상태를 변경. useEffect로 상태 변경 시 document.documentElement.dataset.theme에 값을 기록. (전역 스타일 적용 용도)
+    - ThemeContext.Provider에 value={{ theme, toggleTheme }}를 넣고 children을 감싸줍니다.
+- 2.Provider 배치 (RootLayout)    
+  - RootLayout에서 ThemeProvider로 루트(또는 필요한 하위 트리)를 감싸줍니다.
+  - 하위에 렌더링 되는 모든 컴포넌트들이 ThemeContext에 접근
+- 3.Consumer 사용 (theme-status.tsx)  
+  - ThemeStatus는 'use client'로 클라이언트 컴포넌트이며, useContext(ThemeContext)를 사용해 value를 읽어 들입니다.
+  - UI에서는 theme 값을 표시하고, 버튼 클릭 시 toggleTheme()을 호출 합니다.
+
+---
+
+### Context provider의 동작 순서
+- 동작 순서(버튼 클릭 시 호출)
+1. 사용자가 ThemeStatus의 버튼 클릭.
+2. toggleTheme() 호출. (ThemeStatus가 Provider의 함수를 호출)
+3. rovider 내부의 setTheme이 실행되어 theme 상태가 변경.
+4. 상태 변경으로 Provider와 그 하위 컴포넌트들이 리렌더링되어 theme 값이 최신으로 반영됨.
+5. useEffect가 실행되어 document.documentElement.dataset.theme 값도 갱신. (글로벌 스타일 반영)
+
+### Context provider 순서도 형식
+- RootLayout 렌더
+- ThemeProvider 생성 (useState: theme)
+- Provider value 제공 -> children 렌더
+- ThemeStatus(useContext) 읽음
+- 사용자 클릭 -> toggleTheme() 호출
+- setTheme(newTheme) 실행 (state 변경)
+- useEffect 실행 -> document.dataset.theme 업데이트
+- Provider & Consumer 리렌더 -> UI 갱신
+
+---
+
+### gallery.tsx 외부(서드 파티) component 실습
+- gallery.tsx를 문서 처럼 작성하면 다음과 같은 오류가 발생
+-> 먼저 모듈을 설치하면 오류를 해결.
+  - Cannot find module 'acme-carousel' or its corresponding type declarations. ts(2307)
+- 하지만 모듈을 설치한 후에도 다시 Carousel 컴포넌트를 사용할 때 오류가 발생합니다.
+  - Property 'items' is missing in type '{}' but required in type 'CarouselProps'. ts(2741)
+- 이 오류는 Carousel 컴포넌트의 타입 정의(CarouselProps)에 필수 prop인 items가 정의되어 있어서, 를 props 없이 렌더링해서 발생하는 타입 에러입니다.
+- items에서 사용할 이미지는 'https://picsum.photos/'의 더미를 사용합니다.
+
+### app/carousel/page.tsx
+```
+import Gallery from "@/components/gallery";
+
+export default function CarouselPage() {
+   return (
+     <div>
+       <h1>Carousel Page</h1>
+       <Gallery />
+     </div>
+   );
+}
+```
+- 오류 수정후에도 동작하지만, 첫 페이지에 모두 출력되어 정상 동작이라 할 수는 없음.
+- style이 적용되지 않아서이다.
+- style은 node_modules/acme-carousel/dist/styles.css 경로에 있지만, 이렇게 특정 모듈에 있는 스타일을 사용할 경우 global.css에 import해서 사용하는 것이 일반적이다.
+```
+@import 'acme-carousel/dist/styles.css';
+```
+-> 하지만 이번 경우에는 acme-carousel의 특성 때문에 오류가 발생
+
+- 이런 경우라면 스타일을 components/에 복사해서 사용합니다. 위치는 다른 곳이라도 상관 없음.
+-> gallery.tsx에 import './styles.css' 를 추가
+
+---
+
+### acme-carousel의 주요 옵션 및 기능
+- 자동 전환(autoplay)
+- 반응형(responsive)
+- 지원터치/스와이프 제어(touch/swipe)
+- 가상화(virtualization) 및 지연 로딩(lazy loading)
+- 접근성(accessibility) 기능
+- 고급 애니메이션 및 3D 효과 등
+---
+
+- { Carousel, Slide } 처럼 import하면 다음과 같은 오류가 발생
+   
+   ->따라서 default export해줍니다
+   ```
+   import { useState } from 'react'
+  import { Carousel } from 'acme-carousel'
+  import Silde from 'acme-carousel' 
+  ```
+### [ 라이브러리 작성자를 위한 조언 ]
+- component 라이브러리를 빌드하는 경우, client 전용 기능에 의존하는 진입점에 "use client" 지시문을 추가합니다.
+- 이렇게 하면 사용자가 래퍼를 만들 필요 없이 component를 server component로 가져올 수 있습니다.
+- 일부 번들러는 "use client" 지시어를 제거할 수 있습니다.
+- React Wrap Balancer 및 Vercel Analytics 저장소에서 "use client" 지시어를 포함하도록 esbuild를 구성하는 방법의 예를 확인할 수 있습니다.
+
+---
+- 해당 client-only(클라이언트 전용) 패키지는 클라이언트 전용 로직이 포함된 모듈을 표시하는 데 사용할 수 있습니다. (예 window 객체에 액세스하는 코드)
+- Next.js에서 server-only 또는 client-only를 설치하는 것은 선택 사항입니다.
+-그러나 lint 규칙에서 불필요한 종속성을 표시하는 경우, 문제를 방지하기 위해 해당 종속성을 설치할 수 있습니다.
+
+### 환경 변수 노출 예방
+- JavaScript 모듈은 server 및 client component 모듈 간에 공유될 수 있습니다.
+- 이 말의 의미는 실수로 server 전용 코드를 client로 가져올 수도 있습니다.
+
+
+* Next.js에서는 NEXT_PUBLIC_ 접두사가 붙은 환경 변수만 client 번들에 포함됩니다.
+- 접두사가 붙지 않은 변수의 경우 Next.js에서 빈 문자열로 대체됩니다.
+- 결과적으로 client에서 getData()를 가져와서 실행할 수는 있지만 예상대로 작동하지는 않습니다.
+- client component에서 실수로 사용되는 것을 방지하려면 server-only - package(서버 전용 패키지)를 사용할 수 있습니다.
+---
+
+
+### Fetching Data (데이터 가져오기)
+1-1. 서버 컴포넌트
+
+- 서버 컴포넌트에서 데이터를 가져올 수 있는 방법은 다음과 같습니다.
+  - fetch API
+  - ORM 또는 데이터베이스
+- [ fetch API 사용 ]
+  - 데이터를 가져오려면 fetch API를 사용하여 컴포넌트를 비동기식 함수로 변환하고 다음 fetch 호출을 기다립니다. 
+
+
+- [ ORM 또는 데이터베이스를 사용 ]
+
+- 서버 컴포넌트는 서버에서 렌더링 되기 때문에 ORM이나 데이터베이스
+클라이언트를 사용해서 안전하게 데이터베이스 쿼리를 실행할 수 있습니다.
+- 컴포넌트를 비동기 함수로 변환하고 호출을 기다리면 됩니다.
+- **ORM(Object-Relational Mapping)**은 객체 지향 프로그래밍 언어와 관계형 데이터베이스 간의 데이터를 자동으로 변환해주는 기술
+---
+### 1. 데이터 가져오기(Fetching Data)
+- 1-2. 클라이언트 컴포넌트
+
+- 클라이언트 컴포넌트에서 데이터를 가져오는 방법에는 두 가지가 있습니다.
+  - React의 use Hook
+  - SWR 또는 React 쿼리와 같은 통신 라이브러리
+- [ use Hook을 사용한 스트리밍 데이터 ]
+
+  - React의 use Hook을 사용해서 서버에서 클라이언트로 데이터를 스트리밍합니다.
+  - 서버 컴포넌트에서 데이터를 먼저 fetch하고, 그 결과(promise)를 클라이언트 컴포넌트에 prop으로 전달합니다.
+  - 서버 컴포넌트는 async가 가능하기 때문에 await fetch()도 사용 가능합니다.
+  - 하지만 클라이언트 컴포넌트에서는 async가 불가능하기 때문에 직접 fetch가 불가능 합니다. (렌더링 중 fetch 금지)
+  - 이런 이유 때문에 서버에서 fetch한 결과를 prop으로 넘기고, 클라이언트에서는 use(promise)를 써서 데이터를 가져옵니다.
+---
+### React의 use Hook을 사용한 실습
+- Don't await the data fetching function. 주석은 fetch함수에 await을 사용하지 말라는 의미입니다.
+- 가장 간단히 할 수 있는 방법은 getPost()함수를 사용하지 않고, 그 자리에 fetch함수를 그대로 사용하는 것입니다.
 ## 2025-10-22 9주차 수업내용
 ### server 및 client component 인터리빙 
 - 인터리빙(Interleaving)은 일반적으로 여러 데이터 블록이나 비트를 섞어서 전송하거나 처리하여 오류 발생 시 영향을 최소화하는 기술입니다.

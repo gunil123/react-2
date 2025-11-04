@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ThemeProvider from "@/components/theme-provider";
 import ThemeStatus from "@/components/theme-status";
+import "./global.css";
 
 export default function RootLayout({
   children,
@@ -8,7 +9,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light">
       <body>
         <ThemeProvider>
           <header>

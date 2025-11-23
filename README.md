@@ -1,5 +1,600 @@
 # 202130115 박건일
-## 2025-10-20 10주차 수업내용
+## 2025-11-19 13주차 수업내용
+### introduction
+- Next.js는 CSS를 사용하여 응용 프로그램의 스타일을 지정하는 여러 가지 방법을 제공 합니다.
+- Tailwind CSS, CSS Modules, Global CSS, External Stylesheets, Sass (Guide), CSS-in-JS (Guide)
+
+### 1. Tailwind CSS
+- Tailwind CSS 는 사용자 정의 디자인을 구축하기 위한 저수준 유틸리티 클래스를 제공하는 유틸리티 우선 CSS 프레임워크입니다.
+```
+css 설치
+npm install -D tailwindcss @tailwindcss/postcss
+```
+- 프로젝트를 생성할 때 Tailwind CSS를 선택했으면 별도의 설치는 필요 없습니다.
+- postcss.config.mjs 파일에 PostCSS 플러그인을 추가합니다.
+```
+export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+}
+```
+- 전역 CSS 파일에서 Tailwind 가져오기:
+```
+@import 'tailwindcss';
+```
+- 루트 레이아웃에서 CSS 파일을 가져오기
+```
+// app/layout.tsx
+
+import './globals.css'
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+### 2. CSS Modules
+
+- CSS 모듈은 고유한 클래스 이름을 생성하여 CSS의 범위를 로컬로 지정합니다.
+- 이를 통해 이름 충돌에 대한 걱정 없이 다른 파일에서 동일한 클래스를 사용할 수 있습니다.
+- CSS 모듈 사용을 시작하려면 .module.css 확장자가 있는 새 파일을 만들고, app 디렉토리의 컴포넌트로 가져옵니다.
+```
+/* app/blog/blog.module.css */
+
+.blog {
+  padding: 24px;
+}
+```
+### 3. Global(전역) CSS
+- 전역 CSS를 사용하여 응용 프로그램 전체에 스타일을 적용할 수 있습니다.
+- app/global.css 파일을 만들고 루트 레이아웃으로 가져와 애플리케이션의 모든 경로에 스타일을 적용합니다.
+
+
+- 전역 app 스타일은 디렉토리 내의 모든 레이아웃, 페이지 또는 컴포넌트로 가져올 수 있습니다. 그러나 Next.js는 스타일시트에 대한 React의 기본 제공 지원을 사용하여 Suspense와 통합하기 때문에 현재 충돌로 이어질 수 있는 경로 사이를 탐색할 때 스타일시트가 제거되지 않습니다.
+- 선언한 글로벌 CSS(예: Tailwind의 기본 스타일)에는 전역 스타일을 사용하고, 컴포넌트 스타일링에는 Tailwind CSS, 필요한 경우 사용자 정의 CSS에는 CSS 모듈을 사용하는 것이 좋습니다.
+
+
+- 정리하면 다음과 같습니다.
+1. 전역적으로 한 번만 적용되어야 하는 스타일은 global.css에 선언해서 사용합니다. 예를 들어 Tailwind의 기본 스타일(tailwindcss) 을 global에 import합니다.
+2. 대부분의 컴포넌트 스타일은 Tailwind로 처리합니다.
+3. Tailwind로 처리하기 어려운 특정 컴포넌트에 한해서 CSS Modules로 커스텀 스타일을 만들어 사용합니다.
+
+- Next.js에서 추천하는 스타일링 방법
+- [ Global Styles = 전체 앱에 공통 적용되는 스타일 ]
+
+#### 대표적인 Global Style이 적용되는 예는 다음과 같습니다.
+1. html, body 기본 스타일
+2. reset 스타일
+3. 전역 폰트 import
+4. 전역 색상/레이아웃 규칙
+5. 공통 animation 정의 등
+- 반드시 전역적으로 동작해야 하는 스타일만 globals.css 선언해야 합니다.
+- 즉, 앱 전체에 적용되어야 하는 단 한 번의 스타일을 globals.css 정의 하라는 의미입니다.
+
+---
+
+### Next.js에서 추천하는 스타일링 방법
+- [ Tailwind CSS = 대부분의 "컴포넌트 스타일링" ]
+- Tailwind는 컴포넌트 단위 스타일 작성에 최적화되어 있습니다.
+  - margin/padding
+  - flex/grid 레이아웃
+  - border, color, hover, transition
+  - 반응형 클래스 등
+- 위의 예가 포함되는 대부분의 컴포넌트는 Tailwind로 스타일링을 할 경우 생산성을 향상 시키고, 빠른 유지보수에도 유리합니다.
+- 즉, 버튼, 카드, 내비게이션바 등 일반적인 UI는 Tailwind 클래스만으로 스타일링 하는 것이 좋습니다.
+
+
+- [ CSS Modules = Tailwind로 표현하기 애매한 복잡한 스타일 ]
+- Tailwind로 해결할 수 없는 스타일 예는 다음과 같습니다.
+  1. 특정 컴포넌트만 사용하는 복잡한 animation
+  2. canvas, svg 등의 고급 스타일
+  3. Tailwind에 없는 아주 예외적인 custom class
+  4. 많은 스타일링 규칙이 필요한 상황 (@keyframes, @font-face, 특수 selector 등)
+- 이런 상황에서는 Button.module.css, Card.module.css처럼 CSS Module을 사용해서 해당 컴포넌트에만 스코프된 스타일을 적용하는 것이 좋습니다.
+- 핵심은 CSS Modules은 Tailwind로 처리하기 어려울 때만 사용하라는 Next.js의 의도를 반영한 가이드 입니다.
+---
+
+### 4. 외부 스타일시트
+- 외부 패키지로 제공되는 스타일시트는 app 디렉토리의 컴포넌트를 포함하여, 어느 곳에서나 import해서 사용할 수 있습니다.
+- src 디렉토리를 사용하는 경우라면 src 디렉토리의 어느 곳에서나 사용할 수 있다는 의미 입니다.
+```
+// app/layout.tsx
+
+import 'bootstrap/dist/css/bootstrap.css'
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className="container">{children}</body>
+    </html>
+  )
+}
+```
+- React 19에서는 를 사용할 수 있습니다. 자세한 내용은 React link 문서를 참고하세요.
+---
+### Bootstrap 실습 (외부 스타일 시트)
+- 먼저 bootstrap 패키지를 설치합니다. 사이트에 상세한 설명이 있습니다.
+```
+npm install bootstrap@5.3.0
+```
+- 설치가 끝나면 사용하고 싶은 컴포넌트에 다음과 같이 import해서 사용합니다.
+```
+import 'bootstrap/dist/css/bootstrap.css'
+```
+- 문서에서는 RootLayout에 적용하는 것으로 되어 있으나 확인을 위해 blog2 페이지를 만든 후에 localLayout에 적용해 보도록 하겠습니다.
+```
+// src > app > blog2 > layout.tsx > Blog2Layout
+
+import 'bootstrap/dist/css/bootstrap.css'
+
+export default function Blog2Layout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <main>
+      <div className="container">{children}</div>
+    </main>
+  )
+}
+```
+- Blog2Layout에서 line10의 className="container" 는 Bootstrap의 스타일입니다.
+- 다음으로 blog2 page를 작성합니다.
+- 이 페이지에 Bootstrap의 버튼을 추가 합니다. 코드는 사이트의 Docs > Components에서 확인할 수 있습니다. -> 결과들 확인해 보세요.
+
+   
+   
+- Blog2Page에 Bootstrap을 import하지 않아도 사용할 수 있습니다.
+- 이것은 Blog2Layout에 import하는 것 만으로 해당 디렉토리 및 하위 디렉토리 전체에 사용이 가능하기 때문입니다.
+- 이제 local Layout이 어디까지 영향을 미치는지 확인해 보겠습니다.
+- 다음 컴포넌트에서는 Bootstrap의 Alerts중 하나를 사용하고, 내용에는 컴포넌트의 경로를 출력해서 확인하기 좋게 합니다.
+- /blog2/Blog2Com.tsx 컴포넌트를 만들고 출력을 확인해 보세요.
+- /blog2/components/Blog2Com2.tsx 컴포넌트를 만들고 출력을 확인해 보세요.
+- /components/Blog2RootCom.tsx 컴포넌트를 만들고 출력을 확인해 보세요.
+- blog3 페이지를 만들고, 지금까지 만든 컴포넌트를 추가해 줍니다.
+- /blog3/Blog3Com.tsx 컴포넌트를 만들고 blog3 페이지에 삽입해 줍니다.
+---
+
+
+* layout이 영향을 미치는 범위가 이상하다는 것을 발견할 수 있습니다.
+- blog2의 localLayout에만 Bootstrap을 지정했는데 root component도 blog3에도 적용 된다는 것입니다.
+- 심지어는 blog3에 있는 컴포넌트에도 영향을 미칩니다.
+- 지금까지 알고 있던 localLayout의 영향 범위와는 다릅니다.
+- 분명히 localLayout에만 import했는데, src와 모든 하위 디렉토리 에 영향을 주고 있습니다.
+- 이유는 Bootstrap이 전역기반 CSS 프레임워크이기 때문입니다.
+- 따라서 localLayout뿐만 아니라 src/의 어느곳에서나 한번 import 하면 Next.js 번들에 합쳐져서 전역적으로 영향을 미치게 됩니다.
+---
+- 따라서 Bootstrap과 같은 전역적으로 강제 주입하는 CSS 프레임워크는 주의해야 합니다.
+- 전역(Global) 스타일을 페이지 전체에 강제로 주입하는 라이브러리들은 다음과 같습니다.
+  1. Bootstrap :
+    - *.css 를 import하면 모든 HTML 태그에 기본 스타일 규칙이 적용됨.
+    - 버튼, 폼, typography 등이 global reset 수준으로 변경됨.
+    - 다른 스타일과 쉽게 충돌 가능성 있음.
+  2. Bulma :
+    - class 기반이긴 하지만 모든 요소(html, body, button 등)에 글로벌 스타일 적용.
+    - Bootstrap처럼 전체 애플리케이션 스타일이 바뀜.  
+  3. Foundation (Zurb Foundation)   
+    - Bootstrap과 매우 유사한 구조.
+    - normalize + 전역 스타일이 애플리케이션 전체에 적용됨.
+  4. Semantic UI / Fomantic UI
+    - 컴포넌트 스타일이 global CSS로 로드됨.
+    - ui.button 같은 네임스페이스가 있지만 전역 단위로 적용됨.
+    - 스타일 충돌 가능성 있음.  
+  5. Materialize CSS
+    - 구글 Material Design 스타일도 전역 적용.
+    - HTML 기본 요소들의 스타일이 변함.  
+  6. normalize.css / reset.css / sanitize.css
+    - 라이브러리는 아니지만, 전역 리셋.
+    - < h1>, < p>, < ul> 등의 기본 마진/패딩이 전부 변경됨.
+    - 앱 전체 레이아웃에 영향을 주므로 반드시 상위 레벨에서만 사용해야 함.
+- #대부분 프론트앤드 개발에 React와 같은 프레임워크를 사용하지 않던 때부터 광범위하게 사용되어 오던 CSS 프레임워크 들입니다.    
+- #따라서 이러한 CSS 프레임워크를 사용하는 경우는 반드시 top-level layout에서만 사용 해야 합니다.
+- #즉, Tailwind 등 다른 프레임워크와 함께 사용하지 않는 것이 바람직합니다.
+### 5. 순서 지정 및 병합
+- Next.js는 프로덕션 빌드 중에 스타일시트를 자동으로 청크(병합)하여 CSS를 최적화합니다.
+- CSS의 순서는 코드에서 스타일을 가져오는 순서에 따라 다릅니다.
+- 예를 들어, <BaseButton>이 page.module.css보다 먼저 import되기 때문에 base-button.module.css가 page.module.css보다 먼저 요청됩니다.
+--- 
+### 실습
+- base-button.module.css와 page.module.css를 만들어 줍니다.
+- 스타일은 자유롭게 하고, 구분이 쉽게 background-color 정도만 다르게 선언합니다.
+```
+/* src > app > blog4 > base-button.module.css */
+.primary {
+  background-color: #af4c4c;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+}
+```
+- 다음으로 blog4 페이지와 BaseButton 컴포넌트를 문서에 나와 있는 코드를 이용하여 작성합니다.
+- 하지만 문서의 코드를 그대로 이용하면 오류가 발생합니다.
+- 이 오류는 BaseButton 컴포넌트에 props를 받는 구문이 없는데, page에서 props로 className을 전달하고 있기 때문에 발생합니다.
+- 이 문제를 해결하려면 다음과 같이 수정해 주면 됩니다.
+```
+// src > app > blog4 > BaseButton.tsx > BaseButton
+import styles from './base-button.module.css';
+
+type BaseButtonProps = {
+  className?: string
+}
+
+export function BaseButton({ className }: BaseButtonProps) {
+  return (
+    <button className={`${styles.primary} ${className ?? ''}`} />
+  );
+}
+```
+- 이 것은 문서의 설명 부족에서 오는 오해 입니다.
+- "먼저 요청"한 것이지, "먼저 적용"된다는 의미가 아닙니다.
+- #CSS의 적용 순서가 기억 나나요?
+- CSS는 HTML 태그에 가까울 수록 먼저 적용됩니다.
+- 그렇다면 class에서는 어떨까요?
+- class도 중복 선언이 가능합니다. 예를 들어 class='foo bar'처럼 여러 개의 class를 사용할 수 있습니다.
+- 여기서 foo와 bar가 다른 class이기 때문에 두 가지 스타일이 모두 적용됩니다.
+- 그러나 예제에서는 다른 스타일 파일에서 같은 이름의 primary class를 가져옵니다.
+
+
+- HTML에서는 다른 스타일 파일에서 같은 이름의 primary class를 가져올 수 없습니다.
+- 그러나 Next.js에서는 class 이름이 중복되는 경우, 번들하는 과정에서 class 이름 앞에 파일이름 등으로 구분해 줍니다.
+- 이런 기능 때문에 같은 이름의 class도 사용할 수 있습니다.
+- 이렇게 내용이 같은 class인 경우 마지막 class의 스타일이 적용됩니다.
+
+---
+
+## 2025-11-12 12주차 수업내용
+### 스트리밍
+- 경고(Warning): 아래 내용은 애플리케이션에서 cacheComponents config 옵션이 활성화되어 있다고 가정합니다. 이 플래그는 Next.js 15 Canary에서 도입되었습니다.
+- Next.js의 별칭은 latest와 canary 두가지가 있습니다. latest는 현재 가장 최신 안정 버전, canary는 안정화 직전의 최신 개발 버전을 의미합니다.
+- 서버 컴포넌트에서 async/await를 사용하는 경우 Next.js는 동적 렌더링을 선택합니다.
+- 즉, 모든 사용자 요청에 대해 서버에서 데이터를 가져와서 렌더링합니다.
+- 데이터 요청 속도가 느린 경우, 모든 데이터를 가져올 때까지 전체 경로의 렌더링이 차단됩니다.
+- 초기 로드 시간과 사용자 경험을 개선하려면 스트리밍을 사용하여 페이지의 HTML을 더 작은 단위의 블록으로 나누고, 점진적으로 서버에서 클라이언트로 해당 블록을 전송할 수 있습니다.
+
+### 3-1. loading.tsx를 사용하는 방법
+
+- 애플리케이션에서 스트리밍을 구현하는 방법은 두 가지가 있습니다.
+  - loading.tsx 파일로 페이지 감싸기
+  - < Suspense>로 컴포넌트를 감싸기
+- 데이터를 가져오는 동안 전체 페이지를 스트리밍하려면, page와 같은 디렉토리에 loading.tsx 파일을 생성 합니다.
+- 예를 들어, app/blog/page.tsx를 스트리밍하려면, app/blog 디렉토리 안에 loading.tsx 파일을 추가하면 됩니다.
+ -사용자는 page가 렌더링 되는 동안 레이아웃과 로딩 상태를 즉시 확인할 수 있습니다.
+- 렌더링이 완료되면 새 콘텐츠가 자동으로 교체됩니다.
+- loading.tsx는 layout.tsx 내부에 중첩되며, page.tsx 파일과 그 아래의 모든 자식 파일들을 로 자동 래핑합니다.
+  - 이 방법은 경로 세그먼트(layout 및 page)에는 효과적이지만, 더 세분화된 스트리밍을 위해서는 를 사용할 수 있습니다.
+---
+### 3-2. < Suspense>를 사용하는 방법
+- Suspense는 page의 어떤 부분을 스트리밍할지 더욱 세부적으로 설정할 수 있습니다.
+- 예를 들어, 경계를 벗어나는 모든 페이지 콘텐츠를 즉시 표시하고, 경계 안에 있는 블로그 게시물 목록을 스트리밍할 수 있습니다.
+
+
+### 3-3. 의미 있는 로딩 상태 생성
+- 즉시 로딩 상태는 탐색(접속) 후 사용자에게 즉시 표시되는 대체 UI입니다.
+- 즉시 로딩 상태(instant loading state)란 loading.tsx 파일을 추가하여 폴더 내에 로딩 상태를 생성하는 것을 의미합니다.
+- 최상의 사용자 경험을 위해 앱의 응답을 사용자가 쉽게 이해할 수 있도록 의미 있는 로딩 상태를 디자인하는 것이 좋습니다.
+- 예를 들어, 스켈레톤과 스피너를 사용하거나, 커버 사진, 제목 등 향후 화면에 표시되는 작지만 의미 있는 요소를 사용할 수 있습니다.
+- 개발 중에는 React Devtools를 사용하여 컴포넌트의 로딩 상태를 미리 보고 검사할 수 있습니다.
+
+---
+
+### 4-1. 순차적 데이터 fetch
+- 트리 구조 내 중첩된 컴포넌트 각각이 자체 데이터를 가져올 때 중복 요청이 제거되지 않으면 순차적 데이터 가져오기가 발생하며, 이로 인해 응답 시간이 길어집니다.
+- 한 번의 fetch가 다른 하나의 fetch 결과에 따라 달라지는 경우 이 패턴이 필요할 수 있습니다.
+- 예를 들어, 컴포넌트는 컴포넌트가 데이터 fetch를 완료한 후에 데이터를 fetch를 시작합니다.
+- 그 이유는 가 artistID prop에 따라 달라지기 때문입니다.
+
+
+- 사용자 경험을 개선하려면 React 를 사용하여 데이터를 가져오는 동안 fallback을 표시해야 합니다.
+- 이렇게 하면 스트리밍이 활성화되고 순차적인 데이터 요청으로 인해 전체 경로가 차단되는 것을 방지할 수 있습니다.
+
+### 문서 코드 수정 및 lib 생성
+- page에서 Suspense, getArtist, getArtistPlaylists를 import 합니다.
+- getArtist(username) 생성 합니다. : username으로 users 조회 -> 첫 결과를 반환(id, name), 없으면 예외 발생합니다.
+- getArtistPlaylists(artistID) 생성 합니다. : artistID(userID)로 albums 조회 -> [{id,name}, ...] 배열을 반환합니다.
+- Next.js 서버 환경에서 fetch를 사용하므로 page.tsx에서 await/비동기 호출로 바로 사용 가능합니다.
+- URL 세그먼트는 /artist/Bret과 같이 호출합니다.
+- Link도 레이아웃에 추가해 줍니다. RootLayout과 PageLayout 모두 생성해 보세요.
+
+---
+
+### 4-2. 병렬 데이터 fetch
+
+- 경로 내의 데이터 요청이 동시에 발생할 때 병렬 데이터 가져오기가 발생합니다.
+- 기본적으로 레이아웃과 페이지는 병렬로 렌더링됩니다. 따라서 각 세그먼트는 가능한 한 빨리 데이터 fetch를 시작합니다.
+- 그러나 컴포넌트 내부에서 여러 개의 async/await 요청이 다른 요청 뒤에 배치되는 경우 순차적으로 처리될 수 있습니다.
+- 예를 들어, getAlbums는 getArtist가 확인될 때까지 차단됩니다.
+```
+// app/[username]/page.tsx
+import { getArtist, getAlbums } from '@/app/lib/data'
+
+export default async function Page({ params }) {
+  // These requests will be sequential
+  const { username } = params
+  const artist = await getArtist(username)
+  const albums = await getAlbums(username)
+  return <div>{artist.name}</div>
+}
+```
+- 데이터를 사용하는 컴포넌트 외부에서 요청을 정의하고 Promise.all 등을 사용하여 함께 해결함으로써 요청을 병렬로 시작할 수 있습니다.
+- Promise.all을 사용할 때 하나의 요청이 실패하면 전체 작업이 실패합니다.
+- 이 문제를 해결하려면 Promise.allSettled 메서드를 대신 사용할 수 있습니다.
+
+---
+
+## 2025-11-05 11주차 수업내용
+### Fetch의 이해
+
+#### 예제를 살펴 보도록 하겠습니다.
+```
+const promise = new Promise((resolve, reject) => {
+  // 비동기 작업 수행
+  if (성공) {
+    resolve('성공 결과')
+  } else {
+    reject('에러 메시지')
+  }
+})
+```
+#### 1. Promise의 기본 구조
+- new Promise()를 호출하면 Promise 객체가 생성됩니다.
+- 생성자의 인자로 callback 함수가 들어가는데, 이 callback은 두 개의 매개변수를 받습니다.
+  - resolve: 작업이 성공했을 때 호출하는 함수
+  - reject: 작업이 실패했을 때 호출하는 함수
+
+#### 2. resolve()의 기능
+- resolve(value)는 Promise의 상태를 "fulfilled(이행됨)"으로 바꾸고, 그 값(value)을 .then()으로 전달합니다.
+#### 3. 자주 혼동하는 부분
+- resolve는 Promise 안에서 자동으로 전달되는 함수입니다.
+- 직접 정의하는 게 아니라 new Promise 내부 callback의 첫 번째 매개변수로 주어집니다.
+- 다음 코드는 잘못된 예시를 보여줍니다.
+```
+// 다음과 같이 식으로 만드는 게 아닙니다. ( X )
+const resolve = () => {}
+
+// 다음과 같이 사용해야 합니다. ( O )
+new Promise((resolve, reject) => { ... })
+```
+#### 4. 이미 존재하는 Promise를 resolve하는 경우
+- 경우에 따라서 새 Promise를 만들지 않고, 이미 존재하는 값을 "즉시 이행된 Promise"로 감싸고 싶을 때가 있습니다.
+- 이런 경우 Promise.resolve()를 사용합니다.
+```
+Promise.resolve('이미 완료된 값').then(console.log)
+// 출력: "이미 완료된 값"
+```
+- 이것은 new Promise((resolve) => resolve('이미 완료된 값'))와 같은 의미입니다.
+---
+### Fetch의 이해
+#### .then((res) => ...)
+- fetch()가 반환한 Promise 객체가 .then() 메서드를 가지고 있습니다.
+- Promise 객체가 resolve(성공)되면, .then()의 callback 함수가 실행됩니다.
+- 여기서 res는 서버에서 반환된 Promise 객체입니다.
+- Promise 객체는 status, header, body 등 HTTP 응답 전체를 포함합니다.
+- res.ok는 상태 코드가 200-299인지 불리언(Boolean)으로 알려줍니다.
+- res.status는 숫자로 알려줍니다. (예: 200, 404)
+- fetch와 마찬가지로 예외처리는 별도로 해야 합니다.
+
+#### res.json()
+- res.json()은 이 Response 객체의 본문(body)을 JSON으로 파싱하는 비동기 함수입니다.
+- 내부적으로 문자열 형태의 Response body를 읽고, JSON.parse()를 수행하여 자바스크립트 객체로 변환 합니다.
+- 이 함수도 Promise를 반환하기 때문에 다시 then() 체이닝을 통해 파싱된 데이터를 사용할 수 있습니다.
+- 파싱이 완료되면 resolve(성공)되고, 파싱에 실패(유효하지 않은 JSON)하면 reject(거부)됩니다.
+- Response body는 한 번만 읽을 수 있습니다. res.json() 또는 res.text() 등 하나만 사용이 가능 합니다.
+- 내부적으로는 response stream -> text -> JSON.parse(text) 처럼 동작합니다.
+- JSON 파싱 에러의 예외 처리가 필요합니다.
+
+| 구성 요소 | 소속 | 설명 | 예시 |
+| :--- | :--- | :--- | :--- |
+| `fetch()` | 전역 함수 (Web API) | HTTP 요청을 보내고 Promise를 반환 | `fetch(url)` |
+| `then()` | Promise 메서드 | Promise가 완료되면 callback 실행 | `fetch(url).then(...)` |
+| `json()` | Response 메서드 | Body를 JSON으로 변환하는 또 다른 Promise 반환 | `res.json()` |
+
+---
+### Suspense Component란 무엇인가?
+- 비동기 작업 중에 UI의 일부를 일시적으로 대체 UI(fallback)로 보여주어 사용자 경험을 향상시키는 React 기능입니다. (예: 데이터 로딩, 컴포넌트 동적 임포트)
+### [ Suspense의 핵심 기능 ]
+- 비동기 작업이 완료될 때까지 해당 컴포넌트 트리 렌더링을 일시 중지합니다.
+- 작업이 완료되면 실제 UI로 자동 전환합니다.
+- 비동기 로딩 중 보여 줄 fallback UI(로딩 인디케이터 등)를 지정할 수 있습니다.
+- import하여 사용합니다. import { Suspense } from 'react'
+- Suspense 내부에 여러 개의 컴포넌트가 있을 경우, 내부 컴포넌트 중 하나라도 로딩 중이면 fallback UI가 표시되고, 모든 작업이 완료되면 한번에 실제 UI가 노출됩니다.
+- 이 기능을 활용하면 여러 비동기 컴포넌트를 독립적으로 대기 하거나, 병렬 로딩 상태를 효과적으로 관리할 수 있습니다.
+---
+
+### Promise<...>란 무엇인가?
+- Next.js 15.1부터 주요 내부 API들이 비동기(Promise 기반) 구조로 변경 되었습니다.
+- 내부 API(예: params, searchParams, headers, cookies)가 즉시 사용 가능한 값이 아니라 비동기적으로 처리되며 Promise를 반환하게 됩니다.
+- 즉 Promise<...>는 비동기 연산의 결과를 나타내는 객체 타입으로, 연산이 즉시 완료되지 않고 미래의 어느 시점에서 결과가 결정될 때 이를 표현한다는 의미 입니다.
+- Promise<{ id: string }>는 미래에 { id: string } 객체를 반환하겠다는 약속입니다.
+- 즉, 서버 컴포넌트로부터 Promise<{ id: string }> 객체를 받았다면, 클라이언트 컴포넌트에서는 use Hook을 사용해서 개별 데이터에 접근 합니다.
+- Next.js 15.1 이전과 이후의 변화입니다.
+
+
+#### [ 이런 변화가 도입된 이유는? ]
+
+- Next.js의 렌더링 모델이 RSC(React Server Components) 및 스트리밍 렌더링과  완전하게 통합되면서, 모든 데이터 소스(params, headers, etc.)가 서버 렌더링 단계에서 자연(load-lazy) 방식으로 비동기 처리되도록 바뀌었습니다.
+- 이를 통해 더 빠른 요청 병렬 처리 및 효율적인 데이터 패칭이 가능해 졌습니다.
+- 요약하면, Promise<...>는 단순히 "나중에 제공될 비동기 결과"를 뜻하며, Next.js 15.1부터는 라우트 관련 속성들(params, cookies 등)이 모두 Promise 타입으로 제공되어 await로 해제해야 정상 동작합니다.
+
+---
+
+### 서버 컴포넌트에서 getPosts()함수를 사용 하려면(1)
+- 만일 앞의 예제에서 getPosts()함수를 사용하고 싶다면 어떻게 하는 것이 좋을까요?
+  - fetch부분만 별도의 함수로 선언하면 됩니다.
+### 서버 컴포넌트에서 getPosts()함수를 사용 하려면(2)
+- 앞에서 getPosts()함수를 구현해 봤지만 실무에서 사용한다면 좀더 복잡해 집니다.
+- 통신 방식의 설정, cache 설정, 요청 중단, API Key 사용여부, 예외 처리 등
+자세한 내용은 developer.mozilla.org를 참고하세요.
+- 이런 경우라면 별도의 컴포넌트나 라이브러리로 만들어 놓는 것이 재사용에 유리합니다.
+
+- 이번에는 앞의 함수를 라이브러리로 분리하는 방법을 알아보겠습니다.
+
+- src/lib/ 디렉토리를 만들고, 그 안에 getPost.tsx파일을 생성합니다.
+
+- 그리고 다음과 같이 함수를 작성합니다. 설명을 위해 fetch는 두 개로 분할 했습니다.
+- 이 라이브러리는 범용으로 재사용할 목적으로 작성하기 때문에 URL이나 각종 설정은 매개변수로 받아서 처리합니다.
+```
+// src > lib > getPosts.tsx > getPosts
+export default function getPosts(url: string) {
+  const res = fetch(url)
+  const json = res.then((r) => r.json())
+
+  return json
+}
+```
+#### [ 데이터의 전체적인 흐름 ]
+
+- blog에 접속하면 getPosts 라이브러리를 호출하여 fetch 정보를 전달 합니다.
+- getPosts는 받은 정보를 이용하여 fetch 데이터를 가져온 후 json 형태로 blog에 return합니다.
+- blog는 getPosts로부터 받은 데이터를 Posts 컴포넌트에 props로 전달합니다.
+- 이때 blog는 Posts로부터 데이터를 받을 때까지 Suspense로 fallback UI를 실행합니다.
+- Posts 컴포넌트는 받은 props를 use Hook을 사용하여 데이터를 저장합니다.
+- 저장된 데이터는 map함수를 사용하여 list를 만들고 그 결과를 blog로 return합니다.
+- list를 받으면 blog는 fallback UI 실행을 중지하고 즉시 list를 렌더링합니다.  
+---
+
+### 1-4. 커뮤니티 라이브러리(서드파티(third-party) 라이브러리 및 도구)
+
+- 클라이언트 컴포넌트의 fetch data는 SWR 또는 React Query와 같은 커뮤니티 라이브러리를 사용할 수 있습니다.
+- SWR(Stale-While-Revalidate) : Vercel에서 만든 라이브러리로 먼저 캐시된(stale/오래된) 데이터를 빠르게 보여준 후, 백그라운드에서 최신 데이터(revalidate)를 다시 가져옵니다.
+- 그리고 최신 데이터가 도착하면 자동으로 화면을 업데이트합니다.
+- 이런 라이브러리는 캐싱, 스트리밍 및 기타 기능에 대한 자체적인 의미(semantics)를 가지고 있습니다. 예를 들어 SWR을 사용한 예제는 다음과 같습니다.
+- 예제를 사용하려면 먼저 SWR을 import해야 합니다.
+- import 후에도 다음과 같은 오류가 나옵니다.
+- 이 것은 url의 type을 지정해 주지 않아서 발생하는 오류입니다. -> (url: string)
+### 제네릭(T)을 사용하여 반환 값의 타입을 명시적으로 지정
+- 오류를 수정하기 위해서는 다음과 같이 url의 타입만 명시하면 됩니다.
+   
+- 이 경우 반환 타입을 타입스크립트가 추론합니다. fetch(url).then((r) => r.json())의 결과는 일반적으로 Promise 또는 Promise로 추론됩니다.
+- 문제는 any나 unknown으로 추론될 경우, 이 함수를 사용하는 쪽에서는 데이터의 실제 구조(r.name, r.id 등)를 알 수 없기 때문에, 사용할 때마다 타입을 명시 하거나 별도의 타입 가드를 사용해야 합니다.
+- 결과적으로 타입 안전성이 낮아져 런타임 오류의 가능성이 높아집니다.
+- 이를 해결하기 위해서 TypeScript에서는 Generic을 제공합니다.
+- TypeScript의 제네릭(Generic)은 타입을 매개변수처럼 사용하여 컴포넌트(함수, 클래스 등)를 정의할 때 특정 타입에 종속되지 않도록 만드는 방법입니다.
+- 타입을 동적으로 지정하여 동일한 로직을 다양한 타입에 대해 재사용할 수 있습니다.
+- 즉, 타입 안정성을 유지하면서도 유연한 코드를 작성할 수 있게 해줍니다.
+
+
+#### 제네릭을 사용해서 코드를 수정하면 다음과 같습니다.
+```
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = <T,>(url: string): Promise<T> => fetch(url).then((r) => r.json())
+```
+- 제네릭 <T, >를 사용하여 타입 변수 T를 도입했습니다.
+- 콤마(,)는 JSX 문법과의 충돌을 피하기 위해 사용됩니다.
+- 반환 타입은 Promise로 명시적으로 지정합니다.
+- 이렇게 하면 함수를 호출할 때 원하는 타입을 지정하여 타입 안전하게 사용할 수 있습니다.
+- 다만 예제 코드에서 위와 같이 수정하면 data에서 오류가 발생합니다.
+```
+'data' is of type 'unknown'. ts(18046)
+```
+
+---
+
+#### 오류의 원인을 확인해 보겠습니다.
+- useSWR() Hook은 기본적으로 data의 타입을 자동으로 추론하지 않습니다.
+- 즉, fetcher 함수가 제네릭을 사용하더라도, useSWR() 쪽에서 어떤 타입을 T로 써야 하는지 알려주지 않으면, TypeScript는 data를 any 또는 undefined로 간주하게 됩니다.
+- 따라서 data.map(...)처럼 배열 메서드를 호출하려고 하면, 'data' is of type 'unknown' 혹은 data가 any라서 타입 경고가 뜨는 문제가 발생합니다.
+- 이 문제를 해결하려면 useSWR에 제네릭 타입을 명시해 주면 됩니다.
+
+- useSWR<Photo[]>는 useSWR의 제네릭 타입으로 데이터 구조를 알려주는 부분입니다.
+- 즉, fetcher가 Promise<Photo[]>를 반환한다고 명시하는 것입니다.
+```
+const { data, error, isLoading } = useSWR<Photo[]>()
+```
+- data?.map(...)에서 data는 처음에 undefined일 수 있으므로 옵셔널 체이닝(Optional Chaining)(/?)을 사용하면 안전합니다.
+```
+{data?.map((post: { id: string; title: string }) => (
+```
+- TypeScript에서 옵셔널 체이닝(Optional Chaining)은 객체의 속성이나 메서드에 접근할 때, 해당 속성이나 메서드가 null 또는 undefined일 가능성이 있을 경우 안전하게 접근할 수 있도록 도와주는 문법입니다.
+- 타입을 명시하면 data 내부의 post.id와 post.title도 자동으로 타입 체크가 됩니다.
+```
+const fetcher = <T,>(url: string): Promise<T> => fetch(url).then((r) => r.json())
+type Photo = {
+  id: string
+  title: string
+}
+
+export default function Blog2Page() {
+  const { data, error, isLoading } = useSWR<Photo[]>(
+    '[https://jsonplaceholder.typicode.com/photos](https://jsonplaceholder.typicode.com/photos)',
+    fetcher
+  )
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  return (
+    <ul>
+      {data?.map((post: { id: string; title: string }) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+---
+
+### 2. 중복된 요청 제거 및 데이터 캐시
+- 중복된 fetch 요청을 제거하는 한 가지 방법은 요청 메모이제이션(request memoization)을 사용하는 것입니다.
+- 즉, 같은 데이터를 여러 번 요청하지 않게 하려면, '요청 메모이제이션(request memoization)'을 사용할 수 있다는 의미입니다.
+- 이 메커니즘(요청 메모이제이션)을 사용하면, 하나의 렌더링 과정(single render pass) 안에서 같은 URL과 옵션을 가진 GET 또는 HEAD 방식의 fetch 호출들은 하나의 요청으로 결합된다.
+- 즉, 렌더링 중에 같은 주소와 설정으로 여러 번 fetch()를 호출하더라도, Next.js는 그것들을 하나의 네트워크 요청으로 통합해서 처리한다는 의미입니다.
+- 이 작업은 자동으로 수행되며, fetch에 Abort 신호를 전달하여 작업을 취소(opt_out)할 수 있습니다.
+- 요청 메모이제이션은 요청의 수명에 따라 범위가 지정됩니다.
+
+
+
+- Next.js의 데이터 캐시를 사용하여 fetch 중복을 제거할 수도 있습니다. 예를 들어, fetch 옵션에서 cache: 'force-cache' 를 설정합니다.
+- 데이터 캐시를 사용하면 현재 렌더 패스와 수신 요청에서 데이터를 공유할 수 있습니다.
+- Fetch를 사용하지 않고 대신 ORM이나 데이터베이스를 직접 사용하는 경우 React 캐시 함수로 데이터 액세스를 래핑할 수 있습니다.
+- 문서의 예제를 실행해 보기 위해서는 데이터베이스 연결이 필요합니다.
+```
+// app/lib/data.ts
+
+import { cache } from 'react'
+import { db, posts, eq } from '@/lib/db'
+
+export const getPost = cache(async (id: string) => {
+  const post = await db.query.posts.findFirst({
+    where: eq(posts.id, parseInt(id)),
+  })
+  return post
+})
+```
+- React의 cache() 함수를 이용해서 getPost() 결과를 메모이제이션(캐시) 합니다. Line4
+- cache() 내부에서 db.query.posts.findFirst()로 데이터베이스에서 특정 게시글을 가져오고 있습니다. Line5
+- 즉, 이 코드는 "데이터베이스 쿼리를 캐싱하는 함수" 예제입니다.
+- 그런데 이 코드가 동작하려면, @/lib/db 안에 데이터베이스 연결 설정과 posts 테이블 정의, eq 조건문 함수가 있어야 합니다.
+
+---
+
+#### 예제의 테스트를 정상적으로 테스트하기 위해서는 2가지 패키지가 필요합니다.
+
+- Drizzle-orm : SQL 데이터베이스를 위한 TypeScript 기반 ORM(Object-Relational Mapping/객체-관계형 매퍼) 패키지입니다.
+
+  - 이 패키지는 타입 안전성, 자동화된 마이그레이션, 그리고 커스텀 데이터 모델 정의의 기능을 제공하며,
+  - SQL을 직접 작성하는 대신 타입스크립트 코드를 통해 데이터베이스를 더 쉽고 안전하게 다룰 수 있게 해줍니다.
+- better-sqlite3 : Node.js 환경에서 SQLite 데이터베이스와 상호 작용하기 위한, 빠르고 사용하기 쉬운 동기식 라이브러리입니다.
+
+  - 기존의 다른 SQLite 라이브러리보다 더 높은 성능과 속도를 제공하며,
+  - 비동기 함수 호출 없이 간단하게 데이터베이스 작업을 할 수 있도록 설계되었습니다.
+## 2025-10-29 10주차 수업내용
 ### CSS 수정
 ```
 html[data-theme='light'] {
